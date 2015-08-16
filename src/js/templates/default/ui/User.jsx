@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['react', 'lodash', 'app/utils', 'app/mixins', 'template/ui/Form', 'template/ui/Grid', 'template/ui/List', 'template/ui/Component'], function(React, _) {
+define(['react', 'lodash', 'he-libs/utils', 'he-libs/mixins', 'he-template/ui/Form', 'he-template/ui/Grid', 'he-template/ui/List', 'he-template/ui/Component'], function(React, _) {
 
 var HEUI = React.createClass({
   mixins: [HE.UI.mixins.lab, HE.UI.mixins.common],
@@ -44,13 +44,21 @@ HEUI.List.Slider = React.createClass({
     var users = this.props['data-lab'];
     if(users){
       return (<div>
-      <HE.UI.Component.Popover>
+      <HE.UI.Component.Dropdown>
         <a href="#">
           xasdasd
           <span className="caret"></span>
         </a>
-        <div> xyaz </div>
-      </HE.UI.Component.Popover>
+        <div> 
+          <div> 1</div>
+          <div> 1</div>
+          <div> 1</div>
+          <div> 1</div>
+          <div> 1</div>
+          <div> 1</div>
+          <div> 1</div>
+        </div>
+      </HE.UI.Component.Dropdown>
         <HE.UI.List.Slider data-col="lg-5 md-4 sm-3 xs-2 xxs-1" data-slides-to-show="lg-3 md-2 sm-1" data-zoom-level="2" data-active-index="0" data-slide-padding="30" data-slides-to-scroll="1">
         {
           Array.isArray(users.getVal())?users.getVal().map(function(user, index){

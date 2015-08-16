@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['react', 'lodash', 'app/utils', 'app/mixins'], function(React, _) {
+define(['react', 'lodash', 'he-libs/utils', 'he-libs/mixins'], function(React, _) {
 
 var HEForm = React.createClass({
   mixins: [HE.UI.mixins.lab, HE.UI.mixins.common],

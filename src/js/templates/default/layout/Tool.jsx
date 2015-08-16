@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['react', 'template/ui/Form', 'template/ui/User'], function(React) {
+define(['react', 'he-template/ui/Form', 'he-template/ui/User'], function(React) {
 
 var ToolLayout = React.createClass({
   render: function() {

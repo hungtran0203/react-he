@@ -1,0 +1,268 @@
+// Foundation by ZURB
+// foundation.zurb.com
+// Licensed under MIT Open Source
+
+@import 'global';
+
+//
+// @variables
+//
+$include-html-dropdown-classes: $include-html-classes !default;
+
+// We use these to controls height and width styles.
+$he-dropdown-max-width: 200px !default;
+$he-dropdown-height: auto !default;
+$he-dropdown-max-height: none !default;
+
+// Used for bottom position
+$he-dropdown-margin-top: 2px !default;
+
+// Used for right position
+$he-dropdown-margin-left: $he-dropdown-margin-top !default;
+
+// Used for left position
+$he-dropdown-margin-right: $he-dropdown-margin-top !default;
+
+// Used for top position
+$he-dropdown-margin-bottom: $he-dropdown-margin-top !default;
+
+// We use this to control the background color
+$he-dropdown-bg: $white !default;
+
+// We use this to set the border styles for dropdowns.
+$he-dropdown-border-style: solid !default;
+$he-dropdown-border-width: 1px !default;
+$he-dropdown-border-color: scale-color($white, $lightness: -20%) !default;
+
+// We use these to style the triangle pip.
+$he-dropdown-triangle-size: 6px !default;
+$he-dropdown-triangle-color: $white !default;
+$he-dropdown-triangle-side-offset: 10px !default;
+
+// We use these to control styles for the list elements.
+$he-dropdown-list-style: none !default;
+$he-dropdown-font-color: $charcoal !default;
+$he-dropdown-font-size: rem-calc(14) !default;
+$he-dropdown-list-padding: rem-calc(5, 10) !default;
+$he-dropdown-line-height: rem-calc(18) !default;
+$he-dropdown-list-hover-bg: $smoke !default;
+$dropdown-mobile-default-float: 0 !default;
+
+// We use this to control the styles for when the dropdown has custom content.
+$he-dropdown-content-padding: rem-calc(20) !default;
+
+// Default radius for dropdown.
+$he-dropdown-radius: $global-radius !default;
+
+//
+// @mixins
+//
+//
+// NOTE: Make default max-width change between list and content types. Can add more width with classes, maybe .small, .medium, .large, etc.;
+// We use this to style the dropdown container element.
+// $content-list - Sets list-style. Default: list. Options: [list, content]
+// $triangle - Sets if dropdown has triangle. Default:true.
+// $max-width - Default: $he-dropdown-max-width || 200px.
+@mixin dropdown-container($content:list, $triangle:true, $max-width:$he-dropdown-max-width) {
+  display: none;
+  left: -9999px;
+  list-style: $he-dropdown-list-style;
+  margin-#{$default-float}: 0;
+  position: absolute;
+
+  &.open {
+    display: block;
+  }
+
+  > *:first-child { margin-top: 0; }
+  > *:last-child { margin-bottom: 0; }
+
+  @if $content == list {
+    background: $he-dropdown-bg;
+    border: $he-dropdown-border-style $he-dropdown-border-width $he-dropdown-border-color;
+    font-size: $he-dropdown-font-size;
+    height: $he-dropdown-height;
+    max-height: $he-dropdown-max-height;
+    width: 100%;
+    z-index: 89;
+  }
+  @else if $content == content {
+    background: $he-dropdown-bg;
+    border: $he-dropdown-border-style $he-dropdown-border-width $he-dropdown-border-color;
+    font-size: $he-dropdown-font-size;
+    height: $he-dropdown-height;
+    max-height: $he-dropdown-max-height;
+    padding: $he-dropdown-content-padding;
+    width: 100%;
+    z-index: 89;
+  }
+
+  @if $triangle == bottom {
+    margin-top: $he-dropdown-margin-top;
+
+    @if $he-dropdown-triangle-size != 0px {
+
+      &:before {
+        @include css-triangle($he-dropdown-triangle-size, $he-dropdown-triangle-color, bottom);
+        position: absolute;
+        top: -($he-dropdown-triangle-size * 2);
+        #{$default-float}: $he-dropdown-triangle-side-offset;
+        z-index: 89;
+      }
+      &:after {
+        @include css-triangle($he-dropdown-triangle-size + 1, $he-dropdown-border-color, bottom);
+        position: absolute;
+        top: -(($he-dropdown-triangle-size + 1) * 2);
+        #{$default-float}: $he-dropdown-triangle-side-offset - 1;
+        z-index: 88;
+      }
+
+      &.right:before {
+        #{$default-float}: auto;
+        #{$opposite-direction}: $he-dropdown-triangle-side-offset;
+      }
+      &.right:after {
+        #{$default-float}: auto;
+        #{$opposite-direction}: $he-dropdown-triangle-side-offset - 1;
+      }
+    }
+  }
+
+  @if $triangle == $default-float {
+    margin-top: 0;
+    margin-#{$default-float}: $he-dropdown-margin-right;
+
+    &:before {
+      @include css-triangle($he-dropdown-triangle-size, $he-dropdown-triangle-color, #{$opposite-direction});
+      position: absolute;
+      top: $he-dropdown-triangle-side-offset;
+      #{$default-float}: -($he-dropdown-triangle-size * 2);
+      z-index: 89;
+    }
+    &:after {
+      @include css-triangle($he-dropdown-triangle-size + 1, $he-dropdown-border-color, #{$opposite-direction});
+      position: absolute;
+      top: $he-dropdown-triangle-side-offset - 1;
+      #{$default-float}: -($he-dropdown-triangle-size * 2) - 2;
+      z-index: 88;
+    }
+
+  }
+
+  @if $triangle == $opposite-direction {
+    margin-top: 0;
+    margin-#{$default-float}: -$he-dropdown-margin-right;
+
+    &:before {
+      @include css-triangle($he-dropdown-triangle-size, $he-dropdown-triangle-color, #{$default-float});
+      position: absolute;
+      top: $he-dropdown-triangle-side-offset;
+      #{$opposite-direction}: -($he-dropdown-triangle-size * 2);
+      #{$default-float}: auto;
+      z-index: 89;
+    }
+    &:after {
+      @include css-triangle($he-dropdown-triangle-size + 1, $he-dropdown-border-color, #{$default-float});
+      position: absolute;
+      top: $he-dropdown-triangle-side-offset - 1;
+      #{$opposite-direction}: -($he-dropdown-triangle-size * 2) - 2;
+      #{$default-float}: auto;
+      z-index: 88;
+    }
+
+  }
+
+  @if $triangle == top {
+    margin-left: 0;
+    margin-top: -$he-dropdown-margin-bottom;
+
+    &:before {
+      @include css-triangle($he-dropdown-triangle-size, $he-dropdown-triangle-color, top);
+      bottom: -($he-dropdown-triangle-size * 2);
+      position: absolute;
+      top: auto;
+      #{$default-float}: $he-dropdown-triangle-side-offset;
+      #{$opposite-direction}: auto;
+      z-index: 89;
+    }
+    &:after {
+      @include css-triangle($he-dropdown-triangle-size + 1, $he-dropdown-border-color, top);
+      bottom: -($he-dropdown-triangle-size * 2) - 2;
+      position: absolute;
+      top: auto;
+      #{$default-float}: $he-dropdown-triangle-side-offset - 1;
+      #{$opposite-direction}: auto;
+      z-index: 88;
+    }
+
+  }
+
+  @if $max-width { max-width: $max-width; }
+  @else { max-width: $he-dropdown-max-width; }
+
+}
+
+// @MIXIN
+//
+// We use this to style the list elements or content inside the dropdown.
+
+@mixin dropdown-style {
+  cursor: $cursor-pointer-value;
+  font-size: $he-dropdown-font-size;
+  line-height: $he-dropdown-line-height;
+  margin: 0;
+
+  &:hover,
+  &:focus { background: $he-dropdown-list-hover-bg; }
+
+  &.radius { @include radius($he-dropdown-radius); }
+
+  a {
+    display: block;
+    padding: $he-dropdown-list-padding;
+    color: $he-dropdown-font-color;
+  }
+}
+
+@include exports("dropdown") {
+  @if $include-html-dropdown-classes {
+
+    /* Foundation Dropdowns */
+    .he-dropdown {
+      @include dropdown-container(list, bottom);
+
+      &.drop-#{$opposite-direction} {
+        @include dropdown-container(list, #{$default-float});
+      }
+
+      &.drop-#{$default-float} {
+        @include dropdown-container(list, #{$opposite-direction});
+      }
+
+      &.drop-top {
+        @include dropdown-container(list, top);
+      }
+      // max-width: none;
+
+      li { @include dropdown-style; }
+
+      // You can also put custom content in these dropdowns
+      &.content { @include dropdown-container(content, $triangle:false); }
+
+      // Sizes
+      &.tiny    { max-width: 200px; }
+      &.small   { max-width: 300px; }
+      &.medium  { max-width: 500px; }
+      &.large   { max-width: 800px; }
+      &.mega    {
+        width:100%!important;
+        max-width:100%!important;
+
+        &.open{
+          left:0!important;
+        }
+      }
+    }
+
+  }
+}

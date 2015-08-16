@@ -63,7 +63,7 @@ define([], function () {
         var link = document.createElement("link");
         link.type = "text/css";
         link.rel = "stylesheet";
-        link.href = require.toUrl('css/' + url);
+        link.href = require.toUrl('he-styles/' + url);
         document.getElementsByTagName("head")[0].appendChild(link);
     }    
   };

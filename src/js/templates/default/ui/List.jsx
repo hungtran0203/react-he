@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['react', 'lodash', 'hammerjs', 'app/utils', 'app/mixins'], function(React, _, Hammer, utils) {
+define(['react', 'lodash', 'hammerjs', 'he-libs/utils', 'he-libs/mixins'], function(React, _, Hammer, utils) {
 
 var HEUI = React.createClass({
   mixins: [HE.UI.mixins.lab, HE.UI.mixins.common],
