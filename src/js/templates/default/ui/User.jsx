@@ -44,7 +44,7 @@ HEUI.List.Slider = React.createClass({
     var users = this.props['data-lab'];
     if(users){
       return (<div>
-      <HE.UI.Component.Dropdown>
+      <HE.UI.Component.Dropdown data-hover="1" data-auto-close="1">
         <a href="#">
           xasdasd
           <span className="caret"></span>

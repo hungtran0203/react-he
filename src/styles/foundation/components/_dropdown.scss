@@ -125,6 +125,16 @@ $he-dropdown-radius: $global-radius !default;
         #{$default-float}: auto;
         #{$opposite-direction}: $he-dropdown-triangle-side-offset - 1;
       }
+      &.center:before {
+        #{$default-float}: auto;
+        #{$opposite-direction}: 50%;
+        transform: translateX($he-dropdown-triangle-size);
+      }
+      &.center:after{
+        #{$default-float}: auto;
+        #{$opposite-direction}: 50%;
+        transform: translateX($he-dropdown-triangle-size);
+      }
     }
   }
 
