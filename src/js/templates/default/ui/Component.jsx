@@ -145,17 +145,34 @@ HEUI.LazyContent = React.createClass({
     return <div ref="loading">Loading ... </div>;
   },
   getItems: function(){
-    return this.getLab().get('members', null);
+    if(this.props['data-items'] !== undefined){
+      return this.props['data-items']
+    } else if(this.props['data-lab'] !== undefined){
+      return this.props['data-lab'].getVal();
+    } else {
+      return null;
+    }
   },
   render: function(){
     var items = this.getItems();
+    var self = this;
+    var children = [];
+    if(items){
+      items = Array.isArray(items)?items:[items];
+      items.map(function(item){
+        var c = Array.isArray(self.props.children)?self.props.children:[self.props.children];
+        c.map(function(child){
+          if(child.props['data-iterator']){
+            children.push(child.props['data-iterator'].apply(self, [item, items]))
+          } else {
+            children.push(child)
+          }
+        })
+      })      
+    }
     return <div className="he-lazy-content" ref="content">
           {
-            items?items.map(function(item){
-              return <div key={item.id}>
-                      {item.name}
-                      </div>
-            }):this.getLoading()
+            items?children:this.getLoading()
           }
           </div>
           ;

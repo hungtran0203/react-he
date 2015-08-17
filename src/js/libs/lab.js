@@ -56,8 +56,13 @@ define([], function () {
       return linkLab;
     }
     this.getVal = function(){
-      if(!this.ns) return this.data;
-      return lab.get(this.ns, this.data, null);  
+      if(this.ns === '' || this.ns === null) {
+        this.binder.dispatch(this.ns, 'get', [this]);
+        return this.data;
+      } else {
+        this.binder.dispatch(this.ns, 'get', [this]);
+        return lab.get(this.ns, this.data, null);          
+      }
     }
     this.setVal = function(val){
      return this.set('', val);
