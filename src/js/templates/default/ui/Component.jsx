@@ -70,7 +70,9 @@ HEUI.Dropdown = React.createClass({
   updateContentStatus: function(){
     var $labelDOM = $(React.findDOMNode(this.refs.label));
     var $contentDOM = $(React.findDOMNode(this.refs.content));
+    var $childContent = $contentDOM.children();
     if($contentDOM.hasClass('open')) {
+      $childContent.trigger('show.he');
       //calculate position
       var offset = $labelDOM.offset();
       var posY = offset.top - $(window).scrollTop();
@@ -103,6 +105,7 @@ HEUI.Dropdown = React.createClass({
       }
 
       $contentDOM.css('left', left + 'px');
+      $childContent.trigger('shown.he');
     }
   },
   getLabel: function(){
@@ -127,6 +130,38 @@ HEUI.Dropdown = React.createClass({
   }
 });
 ///////////////////////////////////// Component.Dropdown /////////////////////////////////////////
+
+///////////////////////////////////// Component.LazyContent /////////////////////////////////////////
+HEUI.LazyContent = React.createClass({
+  mixins: [HE.UI.mixins.lab, HE.UI.mixins.common, HE.UI.mixins.responsive],
+
+  componentDidMount: function(){
+    var ui = this;
+    $(React.findDOMNode(this.refs.content)).on('shown.he', function(){
+      ui.getItems();
+    })
+  },
+  getLoading: function(){
+    return <div ref="loading">Loading ... </div>;
+  },
+  getItems: function(){
+    return this.getLab().get('members', null);
+  },
+  render: function(){
+    var items = this.getItems();
+    return <div className="he-lazy-content" ref="content">
+          {
+            items?items.map(function(item){
+              return <div key={item.id}>
+                      {item.name}
+                      </div>
+            }):this.getLoading()
+          }
+          </div>
+          ;
+  }
+});
+///////////////////////////////////// Component.LazyContent /////////////////////////////////////////
 
 
 HE.UI.setInstance('Component', HEUI);

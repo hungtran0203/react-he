@@ -44,21 +44,6 @@ HEUI.List.Slider = React.createClass({
     var users = this.props['data-lab'];
     if(users){
       return (<div>
-      <HE.UI.Component.Dropdown data-hover="1" data-auto-close="1">
-        <a href="#">
-          xasdasd
-          <span className="caret"></span>
-        </a>
-        <div> 
-          <div> 1</div>
-          <div> 1</div>
-          <div> 1</div>
-          <div> 1</div>
-          <div> 1</div>
-          <div> 1</div>
-          <div> 1</div>
-        </div>
-      </HE.UI.Component.Dropdown>
         <HE.UI.List.Slider data-col="lg-5 md-4 sm-3 xs-2 xxs-1" data-slides-to-show="lg-3 md-2 sm-1" data-zoom-level="2" data-active-index="0" data-slide-padding="30" data-slides-to-scroll="1">
         {
           Array.isArray(users.getVal())?users.getVal().map(function(user, index){
@@ -132,6 +117,37 @@ HEUI.Cover = React.createClass({
   }
 })
 ///////////////////////////////////// User.Avatar /////////////////////////////////////////
+
+///////////////////////////////////// User.OAuthLogin /////////////////////////////////////////
+HEUI.OAuthLogin = React.createClass({
+  mixins: [HE.UI.mixins.lab, HE.UI.mixins.common, HE.UI.mixins.user],
+  render: function(){
+    return (<div>
+        <HEUI.OAuthLogin.FB></HEUI.OAuthLogin.FB>
+      </div>
+    );
+  }
+})
+///////////////////////////////////// User.OAuthLogin /////////////////////////////////////////
+
+///////////////////////////////////// User.OAuthLogin /////////////////////////////////////////
+HEUI.OAuthLogin.FB = React.createClass({
+  mixins: [HE.UI.mixins.lab, HE.UI.mixins.common, HE.UI.mixins.user],
+  handleLogin: function(e){
+    FB.login(function(response) {
+       // handle the response
+       location.reload();
+     }, {scope: 'public_profile,email'});
+  },
+  render: function(){
+    return (
+      <button onClick={this.handleLogin}>
+        FB Login
+      </button>
+    );
+  }
+})
+///////////////////////////////////// User.OAuthLogin /////////////////////////////////////////
 
 
 HE.UI.setInstance('User', HEUI);

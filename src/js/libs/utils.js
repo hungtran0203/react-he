@@ -1,4 +1,4 @@
-define([], function () {
+define(['react', 'jquery'], function (React, $) {
   'use strict';
 
   var utils = {
@@ -65,6 +65,42 @@ define([], function () {
         link.rel = "stylesheet";
         link.href = require.toUrl('he-styles/' + url);
         document.getElementsByTagName("head")[0].appendChild(link);
+    },
+    FB: {
+      api: function(){
+        FB.api(
+          "/me",
+          function (response) {
+            if (response && !response.error) {
+              console.log('aaaaaaaaaaaaaaaaaaa')
+            }
+          }
+        );
+      },
+      displayLogin: function(){
+        React.render(
+          React.createElement(HE.UI.User.OAuthLogin, {}),
+          document.getElementById('fbLogin')
+        );        
+      }
+    },
+    isElementInViewport: function (el, delta) {
+      if (el instanceof jQuery) {
+        el = el[0];
+      }
+
+      if(!delta) delta = 0;
+      var rect = el.getBoundingClientRect();
+
+      //check for hidden
+      if (rect.height == 0 && rect.width == 0) return false;
+
+      return (
+        rect.top >= (0 - delta) &&
+          rect.left >= (0 - delta) &&
+          (rect.bottom - delta) <= (window.innerHeight || document.documentElement.clientHeight) && /*or jQuery(window).height() */
+          (rect.right - delta) <= (window.innerWidth || document.documentElement.clientWidth) /*or jQuery(window).width() */
+        );
     }    
   };
   utils.init();
