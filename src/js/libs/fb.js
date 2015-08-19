@@ -1,4 +1,4 @@
-define(['facebook', 'he-libs/utils'], function(fb, utils){
+define(['facebook', 'he-libs/utils', 'jquery', 'he-libs/lab'], function(fb, utils, $, LAB){
   FB.init({
     appId				: '788741984571936',
 		status 			: true, // check login status
@@ -29,6 +29,42 @@ define(['facebook', 'he-libs/utils'], function(fb, utils){
   	this.params = params;
   	this.done = false;
   	this.retry = 5;
+  	this.paging = LAB.getPagingInstance({next:null, previous:null, count:null});
+
+  	this.seedPagingData = function(oldData, newData, fbPaging){
+  		var paging = this.paging;
+  		var lab = this.getParam('lab', null);
+  		var seedData = oldData;
+  		if(fbPaging && lab){
+  			lab.setPaging('', paging)
+  		}
+  		if(fbPaging.next){
+	  		var nextParams = utils.deparam(fbPaging.next);
+	  		var limit = parseInt(nextParams.limit);
+	  		var offset = parseInt(nextParams.offset) - limit;
+	  		if(!paging.hasPage(offset, limit)){
+		  		paging.addPage(offset, limit);
+		  		paging.setData('next', fbPaging.next);
+		  		seedData = oldData.concat(newData);
+	  		}
+  		} else {
+  			paging.setData('next', null);
+  		}
+  		if(fbPaging.previous){
+  			var previousParams = utils.deparam(fbPaging.previous);	
+	  		var limit = parseInt(previousParams.limit);
+	  		var offset = parseInt(previousParams.offset) + limit;
+	  		if(!paging.hasPage(offset, limit)){
+		  		paging.addPage(offset, limit);
+		  		paging.setData('previous', fbPaging.previous);
+		  		seedData = newData.concat(oldData);
+	  		}
+  		} else {
+  			paging.setData('previous', null);
+  		}
+  		return seedData;
+  	}
+
   	var self = this;
   	this.dispatcher = function(){
   		var endpoint = self.getParam('endpoint', null)
@@ -36,37 +72,66 @@ define(['facebook', 'he-libs/utils'], function(fb, utils){
   		var respCb = self.getParam('response', null);
   		var mapping = self.getParam('mapping', {});
   		var lab = self.getParam('lab', null);
-
+  		var fbParams = self.getParam('params', {});
   		if(lab !== null && endpoint){
   			//assign default get cb
   			if(respCb === null && method === 'get' && mapping){
-  				//default  get response
+  				//default get response
   				respCb = function(res){
-  					var keys = Object.keys(mapping);
-  					keys.forEach(function(src){
-  						var dst = mapping[src];
-  						if(dst !== '' && res[dst] !== undefined){
-  							lab.set(src, res[dst])
-  						}
-  					})
   					if(res['error']){
   						self.retry --;
   						if(self.retry < 0) {
-  							self.done = true;
+  							self.paging.setStatus('failed')
   						}
   					} else {
-	  					self.done = true;
+		 					var keys = Object.keys(mapping);
+	  					keys.forEach(function(src){
+	  						var dst = mapping[src];
+	  						if(res[src] !== undefined){
+	  							var val
+	  							if(Array.isArray(res[src])){
+										val = lab.quite().get(dst, []);
+										if(res['paging']){
+		  								val = self.seedPagingData(val, res[src], res['paging']);
+										} else {
+											val = res[src];
+										}
+	  							} else {
+	  								val = res[src];
+	  							}
+	  							lab.set(dst, val)
+	  						}
+	  					})
+	  					self.paging.setStatus('done');
   					}
   				}
+  				self.setParam('response', respCb);
   			}
-  			if(respCb !== null && !self.done){
-			  	FB.api(endpoint, respCb);
+  			var status = self.paging.getStatus();
+  			if(respCb !== null){
+  				switch(status){
+  					case 'next':
+  						$.get(self.paging.getData('next'), respCb, 'json');
+  						break;
+  					case 'previous':
+  						$.get(self.paging.getData('previous'), respCb, 'json');
+  						break;
+  					case 'ready':
+  						FB.api(endpoint, fbParams, respCb);
+  						break;
+  				}
   			}
   		}
   	}
 
   	this.getParam = function(name, def){
   		return (self.params && self.params[name] !== undefined)?self.params[name]:def;
+  	}
+  	this.setParam = function(name, val){
+  		if(self.params){
+  			self.params[name] = val;
+  		}
+  		return self;
   	}
   	return this;
   };
@@ -78,10 +143,9 @@ define(['facebook', 'he-libs/utils'], function(fb, utils){
 
   FBLib.bindLabGet = function(lab, ns, params){
   	if(!params) return;
-  	params['lab'] = lab;
-  	if(!params['mapping'] && params['data']){
+  	params['lab'] = lab.link(ns);
+  	if(params['mapping'] === undefined ){
   		params['mapping'] = {};
-  		params['mapping'][ns] = params['data'];
   	}
   	params['method'] = 'get';
   	lab.bind(ns, 'get', FBLib.getLabBinder(params))
@@ -94,14 +158,7 @@ define(['facebook', 'he-libs/utils'], function(fb, utils){
   FBLib.bindLabClear = function(lab, ns, params){
 
   };
-
-  FBLib.labBinder = function(){
-  	FB.api('2204685680/members', function(res){
-  		console.log(res);
-  		if(res && res.data) {
-  			store.set('lists', res.data)
-  		}
-  	});
-  }
+  
+  window['HE']['FBLib'] = FBLib;
   return FBLib;
 });

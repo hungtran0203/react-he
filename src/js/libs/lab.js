@@ -1,20 +1,27 @@
 define([], function () {
   'use strict';
 
-  function LAB(ns, data, binder){
+  function LAB(ns, data, binder, pagingCollection){
     this.data = data;
     this.ns = ns;
     this.binder = binder?binder:new LABBinder();
+    this.pagingCollection = pagingCollection?pagingCollection:{};
+    this.enableTrigger = true;
+    this.quite = function(){
+      var silentLab =  new LAB(this.ns, this.data, this.binder, this.pagingCollection);
+      silentLab.enableTrigger = false;
+      return silentLab;
+    }
     this.get = function(ns, defVal){
       ns = lab.joinNs(this.ns, ns);
       var val = lab.get(ns, this.data, defVal)
-      this.binder.dispatch(ns, 'get', [this]);
+      this.dispatch(ns, 'get', [this]);
       return val;
     }
     this.set = function(ns, val){
       ns = lab.joinNs(this.ns, ns);
       lab.set(ns, this.data, val);
-      this.binder.dispatch(ns, 'set', [this]);
+      this.dispatch(ns, 'set', [this]);
       return this;
     }
     this.push = function(ns, val){
@@ -28,7 +35,7 @@ define([], function () {
           this.set(ns, target);
         } else {
           target.push(val);
-          this.binder.dispatch(ns, 'set', [this]);
+          this.dispatch(ns, 'set', [this]);
         }
       }
       return this;
@@ -36,7 +43,7 @@ define([], function () {
     this.clear = function(ns){
       ns = lab.joinNs(this.ns, ns);
       lab.clear(ns, this.data);
-      this.binder.dispatch(ns, 'clear', [this]);
+      this.dispatch(ns, 'clear', [this]);
       return this;
     }
     this.has = function(ns){
@@ -52,25 +59,81 @@ define([], function () {
     }
     this.link = function(ns){
       ns = lab.joinNs(this.ns, ns);
-      var linkLab = new LAB(ns.join('.'), this.data, this.binder);
+      var linkLab = new LAB(ns.join('.'), this.data, this.binder, this.pagingCollection);
       return linkLab;
     }
     this.getVal = function(){
       if(this.ns === '' || this.ns === null) {
-        this.binder.dispatch(this.ns, 'get', [this]);
+        this.dispatch(this.ns, 'get', [this]);
         return this.data;
       } else {
-        this.binder.dispatch(this.ns, 'get', [this]);
+        this.dispatch(this.ns, 'get', [this]);
         return lab.get(this.ns, this.data, null);          
       }
     }
     this.setVal = function(val){
      return this.set('', val);
     }
-
+    this.setPaging = function(ns, paging){
+      ns = lab.joinNs(this.ns, ns);
+      this.pagingCollection[ns.join('.')] = paging;
+      return this;
+    }
+    this.getPaging = function(ns, def){
+      ns = lab.joinNs(this.ns, ns);
+      return this.pagingCollection[ns.join('.')];
+    }
+    this.hasPaging = function(ns){
+      var p = this.getPaging(ns, null)
+      return p === null?false:true;
+    }
+    this.dispatch = function(ns, action, args){
+      if(this.enableTrigger){
+        this.binder.dispatch(ns, action, args);
+      }
+      return this;
+    }
     return this;
   }
 
+  function LABPaging(data){
+    this.data = data?data:{};
+    this.status = 'ready';
+    this.pages = [];  //pages must be sort matter
+    this.getData = function(prop, def){
+      return this.data[prop]?this.data[prop]:def;
+    }
+    this.setData = function(prop, val){
+      this.data[prop] = val;
+      return this;
+    }
+    this.setStatus = function(status){
+      this.status = status;
+    }
+    this.getStatus = function(){
+      return this.status;
+    }
+    this.addPage = function(offset, length){
+      var pIndex = this.getPageIndex(offset, length);
+      if(!this.hasPage(offset, length)){
+        this.pages.push(pIndex);
+      }
+    }
+    this.removePage = function(offset, length){
+      var pIndex = this.getPageIndex(offset, length);
+      var found = this.pages.indexOf(pIndex);
+      if(found >= 0){
+        this.pages = this.pages.slice(found, 1);
+      }
+    }
+    this.hasPage = function(offset, length){
+      var pIndex = this.getPageIndex(offset, length);
+      return (this.pages.indexOf(pIndex) > -1)?true:false;
+    }
+    this.getPageIndex = function(offset, length){
+      return '' + offset + '_' + length;
+    }
+  }
   function LABBinderToken(ns, cb, waitForToken){
     this.cb = cb;
     this.ns = Array.isArray(ns)?ns.join('.'):ns;
@@ -228,6 +291,9 @@ define([], function () {
     getTokenId: function(prefix){
       ++lab.currToken;
       return prefix?prefix + '_' + lab.currToken:lab.currToken;
+    },
+    getPagingInstance: function(data){
+      return new LABPaging(data);
     }
   };
 

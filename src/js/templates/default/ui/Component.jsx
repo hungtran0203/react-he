@@ -70,9 +70,9 @@ HEUI.Dropdown = React.createClass({
   updateContentStatus: function(){
     var $labelDOM = $(React.findDOMNode(this.refs.label));
     var $contentDOM = $(React.findDOMNode(this.refs.content));
-    var $childContent = $contentDOM.children();
+    var $wrapperDOM = $(React.findDOMNode(this.refs.wrapper));
     if($contentDOM.hasClass('open')) {
-      $childContent.trigger('show.he');
+      $wrapperDOM.trigger('show.he.dropdown');
       //calculate position
       var offset = $labelDOM.offset();
       var posY = offset.top - $(window).scrollTop();
@@ -105,7 +105,7 @@ HEUI.Dropdown = React.createClass({
       }
 
       $contentDOM.css('left', left + 'px');
-      $childContent.trigger('shown.he');
+      $wrapperDOM.trigger('shown.he.dropdown');
     }
   },
   getLabel: function(){
@@ -120,7 +120,7 @@ HEUI.Dropdown = React.createClass({
   render: function(){
     var label = this.getLabel();
     var content = this.getContent();
-    return <div className="he-dropdown-wrapper">
+    return <div className="he-dropdown-wrapper" ref="wrapper">
             {React.cloneElement(label, { ref: 'label' })}
             <div className={this.getClass('he-dropdown')} style={this.getContentStyle()} ref="content">
               {content}
@@ -134,51 +134,69 @@ HEUI.Dropdown = React.createClass({
 ///////////////////////////////////// Component.LazyContent /////////////////////////////////////////
 HEUI.LazyContent = React.createClass({
   mixins: [HE.UI.mixins.lab, HE.UI.mixins.common, HE.UI.mixins.responsive],
-
-  componentDidMount: function(){
-    var ui = this;
-    $(React.findDOMNode(this.refs.content)).on('shown.he', function(){
-      ui.getItems();
-    })
+  propTypes: {
+    'data-bind-lazyload': React.PropTypes.func
   },
-  getLoading: function(){
-    return <div ref="loading">Loading ... </div>;
+  componentDidMount: function(){
+    //assign lazy items
+    this.lazyloadLab = this.props['data-lab'];
+    var ui = this;
+    this.props['data-bind-lazyload'](ui)
+  },
+  getLazyItems: function(){
+    return this.lazyloadLab?this.lazyloadLab.getVal():null;
   },
   getItems: function(){
-    if(this.props['data-items'] !== undefined){
-      return this.props['data-items']
-    } else if(this.props['data-lab'] !== undefined){
-      return this.props['data-lab'].getVal();
-    } else {
-      return null;
-    }
+    return this.lazyloadLab?this.lazyloadLab.quite().getVal():null;
   },
   render: function(){
     var items = this.getItems();
     var self = this;
-    var children = [];
-    if(items){
-      items = Array.isArray(items)?items:[items];
-      items.map(function(item){
-        var c = Array.isArray(self.props.children)?self.props.children:[self.props.children];
-        c.map(function(child){
-          if(child.props['data-iterator']){
-            children.push(child.props['data-iterator'].apply(self, [item, items]))
-          } else {
-            children.push(child)
-          }
-        })
-      })      
-    }
     return <div className="he-lazy-content" ref="content">
-          {
-            items?children:this.getLoading()
-          }
+            {this.props.children.map(function(child){
+              if(child.props['data-iterator'] && $.isFunction(child.props['data-iterator'])){
+                return child.props['data-iterator'].apply(self, [items, self]);
+              } else {
+                return child;
+              }
+            })
+            }
           </div>
           ;
   }
 });
 ///////////////////////////////////// Component.LazyContent /////////////////////////////////////////
+
+///////////////////////////////////// Component.OnDisplay /////////////////////////////////////////
+HEUI.OnDisplay = React.createClass({
+  mixins: [HE.UI.mixins.lab, HE.UI.mixins.common, HE.UI.mixins.responsive],
+  propTypes: {
+    'data-delta': React.PropTypes.number,
+    'data-on-display': React.PropTypes.func
+  },
+  componentDidMount: function(){
+    var $this = $(React.findDOMNode(this));
+    var delta = this.props['data-delta'];
+    var ui = this;
+    var handleDisplay = function(e){
+      if(utils.isElementInViewport($this, delta)){
+        ui.props['data-ondisplay'](e, ui);
+      }
+    }
+
+    $(document).on('shown.he.dropdown', handleDisplay);
+    $(document).on('scroll', handleDisplay);
+  },
+  render: function(){
+    return <div className="he-ondisplay">
+            {
+              this.props.children
+            }
+          </div>
+          ;
+  }
+});
+///////////////////////////////////// Component.OnDisplay /////////////////////////////////////////
 
 
 HE.UI.setInstance('Component', HEUI);
