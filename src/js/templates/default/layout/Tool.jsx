@@ -3,7 +3,7 @@
 define(['react', 'jquery', 'he-template/ui/Form', 'he-template/ui/User'], function(React, $) {
 
 var ToolLayout = React.createClass({
-	userDropdownIterator: function(items, ui){
+	userDropdownIterator: function(items, lazyloadUI){
 		if(!items) return '';
 		if(Array.isArray(items)){
 			if(items.length === 0){
@@ -19,38 +19,27 @@ var ToolLayout = React.createClass({
 			return 'Invalid data';
 		}
 	},
-	getPreviousLoadingIcon: function(items, ui){
-		var lab = ui.props['data-lab']
-		var paging = lab.getPaging('');
-		if(paging !== undefined && paging.getData('previous')){
-			// paging.setStatus('previous');
-			// ui.getLazyItems();
-			// return <div key="load_previous"> Loading ... </div>;
+	getPreviousLoadingUI: function(items, lazyloadUI){
+		if(lazyloadUI.hasPrevious()){
+			return <HE.UI.Component.OnDisplay key="load_previous" data-ondisplay={function(){lazyloadUI.loadPrevious();}}> Loading ... </HE.UI.Component.OnDisplay>;
 		} else {
 			return '';
 		}
 	},
-	getNextLoadingIcon: function(items, ui){
-		var lab = ui.props['data-lab']
-		var paging = lab.getPaging('');
-		var handleOnDisplay = function(e){
-			if(paging){
-				paging.setStatus('next');
-			}
-			ui.getLazyItems()
-		}
-		if(items === null || (paging !== undefined && paging.getData('next'))){
-			return <HE.UI.Component.OnDisplay key="load_next" data-ondisplay={handleOnDisplay}> Loading ... </HE.UI.Component.OnDisplay>;
+
+	getNextLoadingUI: function(items, lazyloadUI){
+		if(lazyloadUI.isLoadFailed()){
+			return 'Load failed';
+		} else if(!lazyloadUI.isLoaded()){
+			return <HE.UI.Component.OnDisplay key="load_next" data-ondisplay={function(){lazyloadUI.loadLazyItems();}}> start loading... </HE.UI.Component.OnDisplay>;
+		} else if(lazyloadUI.hasNext()){
+			return <HE.UI.Component.OnDisplay key="load_next" data-ondisplay={function(){lazyloadUI.loadNext();}}> Loading ... </HE.UI.Component.OnDisplay>;
 		} else {
 			return '';
 		}
 	},
-	handleLazyload: function(ui){
-  //   var members = store.link('members')
-		// var $dropdown = $(React.findDOMNode(this));
-		// $dropdown.on('shown.he.dropdown', function(){
-		// 	ui.getLazyItems();
-		// })
+	lazyloadMounted: function(lazyloadUI){
+
 	},
   render: function() {
       var users = store.link('users');
@@ -61,10 +50,10 @@ var ToolLayout = React.createClass({
 	          xasdasd
 	          <span className="caret"></span>
 	        </a>
-	        <HE.UI.Component.LazyContent data-lab={members} data-bind-lazyload={this.handleLazyload}>
-            <div data-iterator={this.getPreviousLoadingIcon}></div>
+	        <HE.UI.Component.LazyContent data-lab={members} data-lazyload-mounted={this.lazyloadMounted} ref="lazyloadUI">
+            <div data-iterator={this.getPreviousLoadingUI}></div>
 	        	<div data-iterator={this.userDropdownIterator}></div>
-            <div data-iterator={this.getNextLoadingIcon}></div>
+            <div data-iterator={this.getNextLoadingUI}></div>
 	        </HE.UI.Component.LazyContent>
 	      </HE.UI.Component.Dropdown>
       </div>

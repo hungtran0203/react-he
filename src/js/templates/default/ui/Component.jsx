@@ -135,19 +135,88 @@ HEUI.Dropdown = React.createClass({
 HEUI.LazyContent = React.createClass({
   mixins: [HE.UI.mixins.lab, HE.UI.mixins.common, HE.UI.mixins.responsive],
   propTypes: {
-    'data-bind-lazyload': React.PropTypes.func
+    'data-lazyload-mounted': React.PropTypes.func
   },
   componentDidMount: function(){
     //assign lazy items
     this.lazyloadLab = this.props['data-lab'];
     var ui = this;
-    this.props['data-bind-lazyload'](ui)
+    this.props['data-lazyload-mounted'](ui)
   },
-  getLazyItems: function(){
+  loadLazyItems: function(){
+    //trigger lazy load process
     return this.lazyloadLab?this.lazyloadLab.getVal():null;
   },
   getItems: function(){
     return this.lazyloadLab?this.lazyloadLab.quite().getVal():null;
+  },
+  isLoadFailed: function(){
+    //check if failed on load items
+    if(this.lazyloadLab !== undefined){
+      var paging = this.lazyloadLab.getPaging('');
+      return paging !== undefined && paging.hasStatus('failed')
+    } else {
+      return false;
+    }
+  },
+  getErrorMessage: function(){
+    if(this.lazyloadLab !== undefined){
+      var paging = this.lazyloadLab.getPaging('');
+      if(paging !== undefined) {
+        return paging.errMsg;
+      }
+    }
+    return '';
+  },
+  isLoaded: function(){
+    //check if this component was triggered to load
+    return (this.getItems() !== null);
+  },
+  hasNext: function(){
+    //check if this component has next items to load
+    if(this.lazyloadLab !== undefined){
+      var paging = this.lazyloadLab.getPaging('');
+      return (paging !== undefined && paging.getData('next'))
+    } else {
+      return false;
+    }
+  },
+  loadNext: function(){
+    //trigger loading next items
+    if(this.hasNext()){
+      var paging = this.lazyloadLab.getPaging('');
+      if(paging.hasStatus('failed')){
+        this.setState({'rerender':true});
+        return;
+      }
+      if(paging.hasNext()){
+        paging.setStatus('next');
+      }
+      this.loadLazyItems();
+    }
+  },
+  hasPrevious: function(){
+    //check if this component has previous items to load
+    if(this.lazyloadLab !== undefined){
+      var paging = this.lazyloadLab.getPaging('');
+      return (paging !== undefined && paging.getData('previous'))
+    } else {
+      return false;
+    }    
+  },
+  loadPrevious: function(){
+    //trigger loading previous items
+    if(this.hasPrevious()){
+      var paging = this.lazyloadLab.getPaging('');
+      if(paging.hasStatus('failed')){
+        this.setState({'rerender':true});
+        return;
+      }
+      if(paging.hasPrevious()){
+        paging.setStatus('previous');
+      }
+      this.loadLazyItems();
+    }
   },
   render: function(){
     var items = this.getItems();

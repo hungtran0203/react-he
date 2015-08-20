@@ -28,39 +28,58 @@ define(['facebook', 'he-libs/utils', 'jquery', 'he-libs/lab'], function(fb, util
   function FBLabBinder(params){
   	this.params = params;
   	this.done = false;
-  	this.retry = 5;
+  	this.retry = 2;
+		//init paging for this binder
   	this.paging = LAB.getPagingInstance({next:null, previous:null, count:null});
 
   	this.seedPagingData = function(oldData, newData, fbPaging){
   		var paging = this.paging;
-  		var lab = this.getParam('lab', null);
   		var seedData = oldData;
-  		if(fbPaging && lab){
-  			lab.setPaging('', paging)
-  		}
+  		var nextLimit, nextOffset, prevLimit, prevOffset;
+  		//parse paging data
   		if(fbPaging.next){
 	  		var nextParams = utils.deparam(fbPaging.next);
-	  		var limit = parseInt(nextParams.limit);
-	  		var offset = parseInt(nextParams.offset) - limit;
-	  		if(!paging.hasPage(offset, limit)){
-		  		paging.addPage(offset, limit);
-		  		paging.setData('next', fbPaging.next);
-		  		seedData = oldData.concat(newData);
-	  		}
-  		} else {
-  			paging.setData('next', null);
+	  		nextLimit = parseInt(nextParams.limit);
+	  		nextOffset = parseInt(nextParams.offset);
+
   		}
   		if(fbPaging.previous){
-  			var previousParams = utils.deparam(fbPaging.previous);	
-	  		var limit = parseInt(previousParams.limit);
-	  		var offset = parseInt(previousParams.offset) + limit;
-	  		if(!paging.hasPage(offset, limit)){
-		  		paging.addPage(offset, limit);
+  			var prevParams = utils.deparam(fbPaging.previous);	
+	  		prevLimit = parseInt(prevParams.limit);
+	  		prevOffset = parseInt(prevParams.offset);
+
+  		}
+  		//if both next + prev exists
+  		if(nextOffset && prevOffset){
+  			if(!paging.hasPage(nextOffset - nextLimit, nextLimit)){
+  				//treat as load next
+		  		paging.addPage(nextOffset - nextLimit, nextLimit);
+		  		paging.setData('next', fbPaging.next);
+		  		seedData = oldData.concat(newData);
+  			} else if(!paging.hasPage(prevOffset + prevLimit, prevLimit)){
+  				//treat as load previous
+		  		paging.addPage(prevOffset + prevLimit, prevLimit);
 		  		paging.setData('previous', fbPaging.previous);
 		  		seedData = newData.concat(oldData);
-	  		}
-  		} else {
-  			paging.setData('previous', null);
+  			}
+  		} else if(nextOffset){
+  			//only next provided, first page
+  			if(!paging.hasPage(nextOffset - nextLimit, nextLimit)){
+		  		paging.addPage(nextOffset - nextLimit, nextLimit);
+		  		paging.setData('next', fbPaging.next);
+		  		seedData = oldData.concat(newData);
+		  	}
+		  	paging.setData('previous', null);
+  		} else if(prevOffset){
+  			//only prev provided, last page
+		  	if(!paging.hasPage(prevOffset + prevLimit, prevLimit)){
+		  		paging.addPage(prevOffset + prevLimit, prevLimit);
+		  		seedData = newData.concat(oldData);
+  			}
+				if(!paging.hasPage(prevOffset, prevLimit)){
+		  		paging.setData('previous', fbPaging.previous);
+		  	}
+		  	paging.setData('next', null);
   		}
   		return seedData;
   	}
@@ -80,8 +99,10 @@ define(['facebook', 'he-libs/utils', 'jquery', 'he-libs/lab'], function(fb, util
   				respCb = function(res){
   					if(res['error']){
   						self.retry --;
-  						if(self.retry < 0) {
+  						if(self.retry <= 0) {
   							self.paging.setStatus('failed')
+								self.paging.errMsg = res['error']['message']
+								lab.set('', lab.quite().getVal()); //refresh lab val
   						}
   					} else {
 		 					var keys = Object.keys(mapping);
@@ -133,6 +154,13 @@ define(['facebook', 'he-libs/utils', 'jquery', 'he-libs/lab'], function(fb, util
   		}
   		return self;
   	}
+
+  	//mount paging to lab
+		var lab = this.getParam('lab', null);
+		if(lab !== null){
+			lab.setPaging('', this.paging);
+		}
+
   	return this;
   };
 
@@ -158,7 +186,7 @@ define(['facebook', 'he-libs/utils', 'jquery', 'he-libs/lab'], function(fb, util
   FBLib.bindLabClear = function(lab, ns, params){
 
   };
-  
+
   window['HE']['FBLib'] = FBLib;
   return FBLib;
 });

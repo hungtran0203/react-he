@@ -20,8 +20,9 @@ define([], function () {
     }
     this.set = function(ns, val){
       ns = lab.joinNs(this.ns, ns);
+      var oldVal = this.quite().get(ns);
       lab.set(ns, this.data, val);
-      this.dispatch(ns, 'set', [this]);
+      this.dispatch(ns, 'set', [this, oldVal, val]);
       return this;
     }
     this.push = function(ns, val){
@@ -42,8 +43,9 @@ define([], function () {
     }
     this.clear = function(ns){
       ns = lab.joinNs(this.ns, ns);
+      var oldVal = this.quite().get(ns);
       lab.clear(ns, this.data);
-      this.dispatch(ns, 'clear', [this]);
+      this.dispatch(ns, 'clear', [this, oldVal]);
       return this;
     }
     this.has = function(ns){
@@ -99,6 +101,7 @@ define([], function () {
   function LABPaging(data){
     this.data = data?data:{};
     this.status = 'ready';
+    this.errMsg = '';
     this.pages = [];  //pages must be sort matter
     this.getData = function(prop, def){
       return this.data[prop]?this.data[prop]:def;
@@ -109,9 +112,19 @@ define([], function () {
     }
     this.setStatus = function(status){
       this.status = status;
+      return this;
     }
     this.getStatus = function(){
       return this.status;
+    }
+    this.hasStatus = function(status){
+      return (this.getStatus() === status);
+    }
+    this.hasNext = function(){
+      return (this.hasStatus('done') && this.getData('next'))
+    }
+    this.hasPrevious = function(){
+      return (this.hasStatus('done') && this.getData('previous'))
     }
     this.addPage = function(offset, length){
       var pIndex = this.getPageIndex(offset, length);
@@ -134,6 +147,7 @@ define([], function () {
       return '' + offset + '_' + length;
     }
   }
+
   function LABBinderToken(ns, cb, waitForToken){
     this.cb = cb;
     this.ns = Array.isArray(ns)?ns.join('.'):ns;
